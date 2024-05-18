@@ -1,71 +1,70 @@
 import random
-import string
 
-class Entidad(object):
-    
+class Entidad:
+    OBJETIVO = "Los algoritmos genéticos sirven para optimizar"
+    GENES = '''aábcdeéfghiíjklmnoópqrstuúvwxyzAÁBCDEÉFGHIÍJKLMNOÓP
+    QRSTUÚVWXYZ 1234567890, .-;:_!"#%&/()=?@${[]}'''
+
     def __init__(self, prop):
         self.prop = prop
         self.fitness = self.get_fitness()
     
     @classmethod
-    def generar_gen(self):
-        global GENES
-        global OBJETIVO
-        res = ''.join(random.choices(OBJETIVO, k=len(OBJETIVO)))
-        return res
+    def generar_gen(cls):
+        return ''.join(random.choices(cls.GENES, k=len(cls.OBJETIVO)))
     
-
+    def cruzar(self, pareja):
+        punto1 = random.randint(1, len(self.prop) - 2)
+        punto2 = random.randint(punto1 + 1, len(self.prop) - 1)
+        gen1 = self.prop[:punto1] + pareja.prop[punto1:punto2] + self.prop[punto2:]
+        gen2 = pareja.prop[:punto1] + self.prop[punto1:punto2] + pareja.prop[punto2:]
+        return [Entidad(gen1), Entidad(gen2)]
+    
+    def mutar(self, tasa_mutacion=0.01):
+        prop_mutada = list(self.prop)
+        for i in range(len(prop_mutada)):
+            if random.random() < tasa_mutacion:
+                prop_mutada[i] = random.choice(self.GENES)
+        self.prop = ''.join(prop_mutada)
+        self.fitness = self.get_fitness()
+    
     def get_fitness(self):
-        global OBJETIVO
-        current = 0
-        for c1, c2 in zip(self.prop, OBJETIVO):
-            if c1 != c2:
-                current+=1
-        return current
-    
-#PROCESO DE AG
-
-#1 - POBLACION
-#Posibles genes
-GENES = '''aábcdeéfghiíjklmnoópqrstuúvwxyzAÁBCDEÉFGHIÍJKLMNOÓP
-QRSTUÚVWXYZ 1234567890, .-;:_!"#%&/()=?@${[]}'''
-
-#Resultado esperado
-OBJETIVO = "Los algoritmos genéticos sirven para optimizar"
+        return sum(1 for c1, c2 in zip(self.prop, self.OBJETIVO) if c1 != c2)
 
 def generate_poblacion(size):
-    poblacion = []
-    for i in range(0, size):
-        gen = Entidad.generar_gen()
-        ind = Entidad(gen)
-        poblacion.append(ind)
-    return poblacion
-
-poblacion = generate_poblacion(100)
-poblacion.sort(key= lambda x:x.fitness)
-
-for ind in poblacion:
-    print(ind.prop)
-#2 - FUNCIÓN DE APTITUD
-#Generamos la poblacion y al mismo se le da a cada entidad un valor de aptitud
-#La funcion que se usa en este caso es diferencia entre caracteres
+    return [Entidad(Entidad.generar_gen()) for _ in range(size)]
 
 def rueda_ruleta(poblacion):
-    total_fitness = sum(ind.fitness for ind in poblacion)
-
+    total_fitness = sum(1 / (ind.fitness + 1) for ind in poblacion)
     pick = random.uniform(0, total_fitness)
-
-    i = 0
+    current = 0
     for ind in poblacion:
-        i += ind.fitness
-        if i > pick:
+        current += 1 / (ind.fitness + 1)
+        if current > pick:
             return ind
 
-seleccionar = rueda_ruleta(poblacion)
+def main():
+    poblacion = generate_poblacion(5000)
+    poblacion.sort(key=lambda x: x.fitness)
+    
+    generacion = 0
+    while poblacion[0].fitness != 0:
+        nueva_generacion = poblacion[:10]  # Mantener a los mejores 10 individuos (élite)
+        while len(nueva_generacion) < len(poblacion):
+            padre = rueda_ruleta(poblacion)
+            madre = rueda_ruleta(poblacion)
+            hijos = padre.cruzar(madre)
+            for hijo in hijos:
+                hijo.mutar(tasa_mutacion=0.01)
+                nueva_generacion.append(hijo)
+        
+        nueva_generacion.sort(key=lambda x: x.fitness)
+        poblacion = nueva_generacion[:len(poblacion)]
+        
+        print(f"Generacion {generacion} - mejor fitness: {poblacion[0].fitness} - gen: {poblacion[0].prop}")
+        generacion += 1
+    
+    print(f"Solución encontrada en la generación {generacion}: {poblacion[0].prop}")
 
-print(f"{seleccionar.prop}, : {seleccionar.fitness}")
-
-#3 - SELECCION
-#Usamos metodo de la ruleta para seleccionar los mejores genes
-
-
+if __name__ == "__main__":
+    main()
