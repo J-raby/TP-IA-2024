@@ -1,4 +1,5 @@
 import random
+import time
 
 class Entidad:
     OBJETIVO = "Los algoritmos genéticos sirven para optimizar"
@@ -44,27 +45,41 @@ def rueda_ruleta(poblacion):
             return ind
 
 def main():
-    poblacion = generate_poblacion(5000)
-    poblacion.sort(key=lambda x: x.fitness)
+    tamanios_poblaciones = [100,1000,50,200,300,500]
+    resultados = {}
+    for tam in tamanios_poblaciones:
+        start_time = time.time()
+        poblacion = generate_poblacion(tam)
+        poblacion.sort(key=lambda x: x.fitness)
     
-    generacion = 0
-    while poblacion[0].fitness != 0:
-        nueva_generacion = poblacion[:10]  # Mantener a los mejores 10 individuos (élite)
-        while len(nueva_generacion) < len(poblacion):
-            padre = rueda_ruleta(poblacion)
-            madre = rueda_ruleta(poblacion)
-            hijos = padre.cruzar(madre)
-            for hijo in hijos:
-                hijo.mutar(tasa_mutacion=0.01)
-                nueva_generacion.append(hijo)
+        generacion = 0
+        while poblacion[0].fitness != 0:
+            nueva_generacion = poblacion[:10]  # Mantener a los mejores 10 individuos (élite)
+            while len(nueva_generacion) < len(poblacion):
+                padre = rueda_ruleta(poblacion)
+                madre = rueda_ruleta(poblacion)
+                hijos = padre.cruzar(madre)
+                for hijo in hijos:
+                    hijo.mutar(tasa_mutacion=0.01)
+                    nueva_generacion.append(hijo)
         
-        nueva_generacion.sort(key=lambda x: x.fitness)
-        poblacion = nueva_generacion[:len(poblacion)]
+            nueva_generacion.sort(key=lambda x: x.fitness)
+            poblacion = nueva_generacion[:len(poblacion)]
         
-        print(f"Generacion {generacion} - mejor fitness: {poblacion[0].fitness} - gen: {poblacion[0].prop}")
-        generacion += 1
-    
-    print(f"Solución encontrada en la generación {generacion}: {poblacion[0].prop}")
+            #print(f"Generacion {generacion} - mejor fitness: {poblacion[0].fitness} - gen: {poblacion[0].prop}")
+            generacion += 1
+        stop_time = time.time()
+        resultados[tam] = {
+            'generations' : generacion,
+            'tiempo' : stop_time - start_time
+        }
+        print(f"Solución encontrada en la generación {generacion}: {poblacion[0].prop} --- en un tiempo de {stop_time - start_time} usando un tamaño de poblacion de {tam}" )
+
+    print(resultados)
+
+    #En base a los distintos tamaños, notamos que entre mas grande es la poblacion mas se tarda en pasar de generacion en generacion, mientras que en poblaciones mas pequeñas
+    # se usan mas generaciones para llegar al resultado pero el paso es más rápido. Por lo que lo mejor es usar poblaciones pequeñas cuando lo importante es el tiempo y poblaciones
+    # grandes cuando lo importante es la menor cantidad de generaciones.
 
 if __name__ == "__main__":
     main()
