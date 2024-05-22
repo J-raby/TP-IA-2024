@@ -1,15 +1,6 @@
 from math import sqrt
 import random
 
-
-#  f(x, y) = (x − 1)^2 + (x − y)^ 4
-def funcion1(x,y):
-   return (x - 1)**2 + (x - y)**4
-
-# f(x, y) = 2 + sqrt(9 - x^2 - y^2)
-def funcion2(x,y):
-   return 2 + sqrt(9 - x**2 - y**2)
-
 #Para generar poblacion
 def generate_poblacion(tam, restriccion_x, restriccion_y):
   poblacion = []
@@ -24,18 +15,19 @@ def generate_poblacion(tam, restriccion_x, restriccion_y):
 
 
 #Para dar valor a individuo
-def funcion_aptitud(ind, funcion):
+#  f(x, y) = (x − 1)^2 + (x − y)^ 4
+def funcion_aptitud(ind):
   x = ind['x']
   y = ind['y']
   return (x - 1)**2 + (x - y)**4
 
 
 # Para seleccionar
-def metodo_ruleta(ord_poblacion, tot_fitness, func):
+def metodo_ruleta(ord_poblacion, tot_fitness):
     offset = 0
     tf = tot_fitness
 
-    min_fitness = funcion_aptitud(ord_poblacion[0], func)
+    min_fitness = funcion_aptitud(ord_poblacion[0])
     if min_fitness < 0:
         offset = -min_fitness
         tf += offset * len(ord_poblacion)
@@ -44,7 +36,7 @@ def metodo_ruleta(ord_poblacion, tot_fitness, func):
 
     acumulado = 0
     for ind in ord_poblacion:
-        fitness = funcion_aptitud(ind, func) + offset
+        fitness = funcion_aptitud(ind) + offset
         acumulado += fitness
 
         if draw <= acumulado:
@@ -105,8 +97,6 @@ while True:
   #Que llegue hasta 0.1 el resultado
   if i == 500 or funcion_aptitud(ind) < 0.1:
     break
-  
-
   i+=1
 
   pob = generar_nueva_gen(pob)
