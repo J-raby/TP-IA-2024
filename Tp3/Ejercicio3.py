@@ -4,7 +4,9 @@ from sklearn.tree import DecisionTreeClassifier # type: ignore
 import pandas as pd # type: ignore
 import numpy as np
 
+#data = pd.read_csv()
 data = load_wine()
+
 df = pd.DataFrame(data.data, columns=data.feature_names)
 df['target'] = data.target
 #Sacamos del dataset el valor que quieremos obtener
